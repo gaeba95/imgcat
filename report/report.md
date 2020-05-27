@@ -1,5 +1,39 @@
 # Rapport HPC - Projet 1 - Imgcat
 
+## Repo GIT
+
+Voici le repo git du projet : [Github](https://github.com/gaeba95/imgcat)
+
+Le code se trouve dans le dossier "code" et les sources du rapport dans "report".
+
+### Dependencies
+
+```
+librairie libjpeg http://libjpeg.sourceforge.net/
+librairie libpng http://www.libpng.org/pub/png/libpng.html
+```
+
+### Build
+
+```bash
+cd code/
+./lib/setup.sh
+make
+```
+
+### Test
+
+```bash
+Pour convertir une image en ASCII:
+./imgcat images/half-life.png
+
+Pour benchamrk la fonction create_raster_from_png:
+./imgcat-create-bm
+
+Pour benchmark la fonction print_raster:
+./imgcat-bm
+```
+
 ## Analyse des performances
 
 ### Perf
@@ -91,8 +125,6 @@ perf annotate --stdio -l --dsos=imgcat --symbol=create_raster_from_png
     0.00 :   40205f: add    $0x8,%rsi
     0.00 :   402063: cmp    %rsi,%rdi
     0.00 :   402066: jne    401fb0 <create_raster_from_png+0x1f0>
-
-
 ```
 
 ```c
@@ -150,7 +182,6 @@ perf annotate --stdio -l --dsos=imgcat --symbol=print_raster
    for (i = (int)(ratio_x * x); i < ratio_x * (x+1); ++i) {
    32.56 :   401845: comiss %xmm0,%xmm6
     0.00 :   401848: ja     4017e0 <print_raster+0x130>
-
 ```
 
 ```c
@@ -159,11 +190,11 @@ for (y = 0; y < print_height; ++y) {
       intensity = 0;
       intensity_count = 0;
       for (j = (int)(ratio_y * y); j < ratio_y * (y+1); ++j) {
-	      for (i = (int)(ratio_x * x); i < ratio_x * (x+1); ++i) {
-	        pixel = &raster->pixels[j][i];
-	        intensity += (0.21 * pixel->r) + (0.72 * pixel->g) + (0.07 * pixel->b);
-	        intensity_count++;
-	      }
+          for (i = (int)(ratio_x * x); i < ratio_x * (x+1); ++i) {
+            pixel = &raster->pixels[j][i];
+            intensity += (0.21 * pixel->r) + (0.72 * pixel->g) + (0.07 * pixel->b);
+            intensity_count++;
+          }
       }
       intensity /= intensity_count;
       printf("%c", ascii_chars[(int)(num_ascii_chars * intensity / 256)]);
@@ -267,7 +298,7 @@ J'ai utilisé OpenMP sur les boucles problématiques.
           index = ((1 - alpha) * 255);
 
           //printf("thread num %d\n", omp_get_thread_num());
-        
+
         raster->pixels[y][x].r = (alpha * row_pointers[y][x_real]) + index;
         raster->pixels[y][x].g = (alpha * row_pointers[y][x_real + 1]) + index;
         raster->pixels[y][x].b = (alpha * row_pointers[y][x_real + 2]) + index;
@@ -297,11 +328,11 @@ for (y = 0; y < print_height; ++y) {
       int len_j = ratio_y * (y+1);
       int len_i = ratio_x * (x+1);
       for (j = (int)(ratio_y * y); j < len_j; ++j) {
-	      for (i = (int)(ratio_x * x); i < len_i; ++i) {
-	        pixel = &raster->pixels[j][i];
-	        intensity += (0.21 * pixel->r) + (0.72 * pixel->g) + (0.07 * pixel->b);
-	        intensity_count++;
-	      }
+          for (i = (int)(ratio_x * x); i < len_i; ++i) {
+            pixel = &raster->pixels[j][i];
+            intensity += (0.21 * pixel->r) + (0.72 * pixel->g) + (0.07 * pixel->b);
+            intensity_count++;
+          }
       }
       intensity /= intensity_count;
       printf("%c", ascii_chars[(int)(num_ascii_chars * intensity / 256)]);
@@ -313,3 +344,9 @@ for (y = 0; y < print_height; ++y) {
 ![](img/bench_print_calcul.png)
 
 On peut voir que qu'il y a une petite amélioration. On a un gain d'environ 4%.
+
+## Conclusion
+
+On pu m'exercer à l'utilisation d'OpenMP et me rendre compte de sa complexité mais aussi de son utilité. C'est la plus grosse optimisation que j'ai pu mettre en place dans ce projet ce qui n'est pas rien. 
+
+A noter aussi que je n'ai optimiser que la fonction faite pour les images PNG car utilisant celle-ci pour mes tests. Cela veut donc dire que l'utilisation d'autres types d'image ne sera pas optimisé.
